@@ -123,5 +123,7 @@ class SHA256:
 if __name__ == '__main__':
 
         m = SHA256()
-        m.update(b"3d52411198d9535ce98b972bfdea8e875a616e5d632e378f7136ccfc1fb0f799")
+        m.update(b"3d52411198d9535ce98baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa972bfdea8e875a616e5d632e378f7136ccfc1fb0f799")
         print(m.hexdigest())
+
+
