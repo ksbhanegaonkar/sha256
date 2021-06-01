@@ -42,9 +42,14 @@ public class TestSha {
         }
         System.out.println(H[4]);
         //System.out.println(map.get("W62"));
-        for(int i=0;i<map.size();i++){
-            System.out.println("W"+i+"=>"+map.get("W"+i));
+//        for(int i=0;i<map.size();i++){
+//            System.out.println("W"+i+"=>"+map.get("W"+i));
+//        }
+        String temp = map.get("W127");
+        for(int i=map.size()-2;i>=0;i--){
+            temp = temp.replace("W"+i, map.get("W"+i));
         }
+        System.out.println(temp);
     }
 
 
