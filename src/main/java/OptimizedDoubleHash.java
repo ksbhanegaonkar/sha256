@@ -7,10 +7,10 @@ import java.nio.IntBuffer;
 public class OptimizedDoubleHash {
 
     public static void main(String[] args) throws DecoderException {
-        String input = "0200000017975b97c18ed1f7e255adf297599b55330edab87803c81701000000000000008a97295a2747b4f1a0b3948df3990344c0e19fa6b2b92b3a19c8e6badc141787358b0553535f0119ffff";
-
-        byte [] hexString = Hex.decodeHex(input);
-        byte[] output = hash(hexString, 0, true);
+        byte [] hexString = Hex.decodeHex("0200000017975b97c18ed1f7e255adf297599b55330edab87803c81701000000000000008a97295a2747b4f1a0b3948df3990344c0e19fa6b2b92b3a19c8e6badc141787358b0553535f011948750833");
+        byte [] hash = OptimizedDoubleHash.hash(hexString, 0x48750833, true);
+        byte [] hash2 = Sha256.hash(hash);
+        System.out.println(Hex.encodeHexString(hash2));
     }
 
     private static final int[] K = {
@@ -53,10 +53,10 @@ public class OptimizedDoubleHash {
              words = pad(message);
 
             // enumerate all blocks (each containing 16 words)
-            for (int i = 0, n = words.length / 16; i < n; ++i) {
+
 
                 // initialize W from the block's words
-                System.arraycopy(words, i * 16, W, 0, 16);
+                System.arraycopy(words, 0, W, 0, 16);
                 for (int t = 16; t < W.length; ++t) {
                     W[t] = smallSig1(W[t - 2]) + W[t - 7] + smallSig0(W[t - 15]) + W[t - 16];
                 }
@@ -78,10 +78,35 @@ public class OptimizedDoubleHash {
                     H[t] += TEMP[t];
                 }
 
-            }
-        }else{
-            words[19] = nones;
+
         }
+
+                words[19] = nones;
+
+                // initialize W from the block's words
+                System.arraycopy(words, 16, W, 0, 16);
+                for (int t = 16; t < W.length; ++t) {
+                    W[t] = smallSig1(W[t - 2]) + W[t - 7] + smallSig0(W[t - 15]) + W[t - 16];
+                }
+
+                // let TEMP = H
+                System.arraycopy(H, 0, TEMP, 0, H.length);
+
+                // operate on TEMP
+                for (int t = 0; t < 64; ++t) {
+                    int t1 = TEMP[7] + bigSig1(TEMP[4]) + ch(TEMP[4], TEMP[5], TEMP[6]) + K[t] + W[t];
+                    int t2 = bigSig0(TEMP[0]) + maj(TEMP[0], TEMP[1], TEMP[2]);
+                    System.arraycopy(TEMP, 0, TEMP, 1, TEMP.length - 1);
+                    TEMP[4] += t1;
+                    TEMP[0] = t1 + t2;
+                }
+
+                // add values in TEMP to values in H
+                for (int t = 0; t < H.length; ++t) {
+                    H[t] += TEMP[t];
+                }
+
+
 
         return toByteArray(H);
     }
