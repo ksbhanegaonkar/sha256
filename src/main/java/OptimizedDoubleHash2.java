@@ -4,18 +4,19 @@ import org.apache.commons.codec.binary.Hex;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-public class OptimizedDoubleHash {
+public class OptimizedDoubleHash2 {
 
     public static void main(String[] args) throws DecoderException {
 
-//        long timeStart = System.currentTimeMillis();
-//        for(int i=0;i<10000000;i++){
-//            byte [] hexString = Hex.decodeHex("0200000017975b97c18ed1f7e255adf297599b55330edab87803c81701000000000000008a97295a2747b4f1a0b3948df3990344c0e19fa6b2b92b3a19c8e6badc141787358b0553535f011948750833");
-//            byte [] hash = OptimizedDoubleHash.hash(hexString, 1215629363+i);
-//            byte [] hash2 = Sha256.hash(hash);
-//        }
-//        long endTime = System.currentTimeMillis() - timeStart;
-//        System.out.println("Time taken : "+(endTime));
+        long timeStart = System.currentTimeMillis();
+        for(int i=0;i<10;i++){
+            byte [] hexString = Hex.decodeHex("0200000017975b97c18ed1f7e255adf297599b55330edab87803c81701000000000000008a97295a2747b4f1a0b3948df3990344c0e19fa6b2b92b3a19c8e6badc141787358b0553535f011948750833");
+            byte [] hash = hash(hexString, 1215629360+i);
+            byte [] hash2 = Sha256.hash(hash);
+            System.out.println(Hex.encodeHexString(hash2));
+        }
+        long endTime = System.currentTimeMillis() - timeStart;
+        System.out.println("Time taken : "+(endTime));
         //12732 vs 17883
 
 
@@ -28,10 +29,10 @@ public class OptimizedDoubleHash {
 //        long endTime = System.currentTimeMillis() - timeStart;
 //        System.out.println("Time taken : "+(endTime));
 
-           byte [] hexString = Hex.decodeHex("0200000017975b97c18ed1f7e255adf297599b55330edab87803c81701000000000000008a97295a2747b4f1a0b3948df3990344c0e19fa6b2b92b3a19c8e6badc141787358b0553535f011948750833");
-           byte [] hash = OptimizedDoubleHash.hash(hexString, 1215629363);
-           byte [] hash2 = Sha256.hash(hash);
-            System.out.println(Hex.encodeHexString(hash2));
+//           byte [] hexString = Hex.decodeHex("0200000017975b97c18ed1f7e255adf297599b55330edab87803c81701000000000000008a97295a2747b4f1a0b3948df3990344c0e19fa6b2b92b3a19c8e6badc141787358b0553535f011948750833");
+//           byte [] hash = OptimizedDoubleHash2.hash(hexString, 1215629363);
+//           byte [] hash2 = Sha256.hash(hash);
+//            System.out.println(Hex.encodeHexString(hash2));
 
     }
 
@@ -56,9 +57,12 @@ public class OptimizedDoubleHash {
     // working arrays
     private static final int[] W = new int[64];
     private static final int[] H = new int[8];
+    private static final int[] MASTER_H = new int[8];
     private static final int[] TEMP = new int[8];
     private static int[] words;
     private static boolean isChanged = true;
+    private static boolean isChanged2 = true;
+
 
     /**
      * Hashes the given message with SHA-256 and returns the hash.
@@ -100,12 +104,12 @@ public class OptimizedDoubleHash {
                 for (int t = 0; t < H.length; ++t) {
                     H[t] += TEMP[t];
                 }
-
+            System.arraycopy(H,0,MASTER_H,0,8);
             isChanged= false;
         }
 
                 words[19] = nones;
-
+                System.arraycopy(MASTER_H,0,H,0,8);
                 // initialize W from the block's words
                 System.arraycopy(words, 16, W, 0, 16);
                 for (int t = 16; t < W.length; ++t) {
@@ -128,6 +132,74 @@ public class OptimizedDoubleHash {
                 for (int t = 0; t < H.length; ++t) {
                     H[t] += TEMP[t];
                 }
+
+
+
+        return toByteArray(H);
+    }
+
+    public static byte[] hash2(byte[] message, int nones) {
+        // let H = H0
+
+
+        // initialize all words
+        if(isChanged2){
+            System.arraycopy(H0, 0, H, 0, H0.length);
+            words = pad(message);
+
+            // enumerate all blocks (each containing 16 words)
+
+
+            // initialize W from the block's words
+            System.arraycopy(words, 0, W, 0, 16);
+            for (int t = 16; t < W.length; ++t) {
+                W[t] = smallSig1(W[t - 2]) + W[t - 7] + smallSig0(W[t - 15]) + W[t - 16];
+            }
+
+            // let TEMP = H
+            System.arraycopy(H, 0, TEMP, 0, H.length);
+
+            // operate on TEMP
+            for (int t = 0; t < W.length; ++t) {
+                int t1 = TEMP[7] + bigSig1(TEMP[4]) + ch(TEMP[4], TEMP[5], TEMP[6]) + K[t] + W[t];
+                int t2 = bigSig0(TEMP[0]) + maj(TEMP[0], TEMP[1], TEMP[2]);
+                System.arraycopy(TEMP, 0, TEMP, 1, TEMP.length - 1);
+                TEMP[4] += t1;
+                TEMP[0] = t1 + t2;
+            }
+
+            // add values in TEMP to values in H
+            for (int t = 0; t < H.length; ++t) {
+                H[t] += TEMP[t];
+            }
+
+            isChanged2= false;
+        }
+
+        words[19] = nones;
+
+        // initialize W from the block's words
+        System.arraycopy(words, 16, W, 0, 16);
+        for (int t = 16; t < W.length; ++t) {
+            W[t] = smallSig1(W[t - 2]) + W[t - 7] + smallSig0(W[t - 15]) + W[t - 16];
+        }
+
+        // let TEMP = H
+        System.arraycopy(H, 0, TEMP, 0, H.length);
+
+        // operate on TEMP
+        for (int t = 0; t < 64; ++t) {
+            int t1 = TEMP[7] + bigSig1(TEMP[4]) + ch(TEMP[4], TEMP[5], TEMP[6]) + K[t] + W[t];
+            int t2 = bigSig0(TEMP[0]) + maj(TEMP[0], TEMP[1], TEMP[2]);
+            System.arraycopy(TEMP, 0, TEMP, 1, TEMP.length - 1);
+            TEMP[4] += t1;
+            TEMP[0] = t1 + t2;
+        }
+
+        // add values in TEMP to values in H
+        for (int t = 0; t < H.length; ++t) {
+            H[t] += TEMP[t];
+        }
 
 
 

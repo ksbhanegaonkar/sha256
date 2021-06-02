@@ -40,16 +40,14 @@ public class TestSha {
         for (int t = 0; t < 8; ++t) {
             H[t] += "+"+TEMP[t];
         }
-        System.out.println(H[4]);
+        System.out.println(H[5]);
+        System.out.println(H[6]);
+        System.out.println(H[7]);
         //System.out.println(map.get("W62"));
-//        for(int i=0;i<map.size();i++){
-//            System.out.println("W"+i+"=>"+map.get("W"+i));
-//        }
-        String temp = map.get("W127");
-        for(int i=map.size()-2;i>=0;i--){
-            temp = temp.replace("W"+i, map.get("W"+i));
+        for(int i=0;i<map.size();i++){
+            System.out.println("W"+i+"=>"+map.get("W"+i));
         }
-        System.out.println(temp);
+
     }
 
 
