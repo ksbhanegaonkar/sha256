@@ -1,0 +1,4 @@
+https://kevin.deldycke.com/2013/07/bfgminer-scrypt-cpu-mining/
+
+error resolve :
+sudo apt-get install libevent-dev
